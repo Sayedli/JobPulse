@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+
+# Virtual env
+.venv/
+
+# Django
+staticfiles/
+media/
+
+# OS
+.DS_Store
+
+# Env
+.env
+.env.local
+.env.*.local
+.env.docker
+
+# Coverage / logs
+*.log
+htmlcov/
+.coverage
