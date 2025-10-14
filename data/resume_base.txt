@@ -1,0 +1,20 @@
+Name: Your Name
+Email: your.email@example.com
+LinkedIn: https://www.linkedin.com/in/your-profile
+GitHub: https://github.com/your-handle
+
+Summary:
+- Highlight your top achievements and technologies.
+
+Experience:
+- Company A — Software Engineer Intern
+  * Built feature X resulting in measurable improvement.
+- Company B — Research Assistant
+  * Investigated Y and collaborated with cross-functional partners.
+
+Projects:
+- Project One — Brief description and technologies used.
+- Project Two — Brief description and outcome.
+
+Education:
+- University Name, Degree, Graduation Year

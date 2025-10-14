@@ -1,0 +1,337 @@
+:root {
+    --nf-bg: linear-gradient(135deg, #050505, #101941, #2f1755);
+    --nf-card-bg: rgba(14, 20, 46, 0.85);
+    --nf-card-border: rgba(144, 238, 255, 0.15);
+    --nf-accent: #8d7bff;
+    --nf-accent-strong: #61f6ff;
+    --nf-text: #f2f5ff;
+    --nf-muted: rgba(255, 255, 255, 0.65);
+    --nf-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+    --nf-radius: 18px;
+    --nf-transition: 0.25s ease;
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.nf-body {
+    min-height: 100vh;
+    margin: 0;
+    color: var(--nf-text);
+    background: var(--nf-bg);
+    position: relative;
+    overflow-x: hidden;
+}
+
+.nf-background {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at 20% 20%, rgba(141, 123, 255, 0.25), transparent 45%),
+                radial-gradient(circle at 80% 30%, rgba(97, 246, 255, 0.18), transparent 50%);
+    filter: blur(40px);
+    z-index: 0;
+}
+
+.nf-nav {
+    position: sticky;
+    top: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 3rem;
+    backdrop-filter: blur(20px);
+    background-color: rgba(5, 10, 30, 0.65);
+    border-bottom: 1px solid rgba(141, 123, 255, 0.15);
+    z-index: 2;
+}
+
+.nf-brand {
+    font-size: 1.5rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.nf-nav-links {
+    display: flex;
+    gap: 1.25rem;
+}
+
+.nf-nav-link {
+    color: var(--nf-muted);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color var(--nf-transition);
+}
+
+.nf-nav-link:hover {
+    color: var(--nf-accent-strong);
+}
+
+.nf-main {
+    position: relative;
+    z-index: 1;
+    padding: 2rem 3rem 4rem;
+}
+
+.nf-alerts {
+    display: grid;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.nf-alert {
+    padding: 0.85rem 1.1rem;
+    border-radius: 12px;
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nf-alert-success {
+    background-color: rgba(97, 246, 255, 0.12);
+}
+
+.nf-alert-error {
+    background-color: rgba(255, 107, 129, 0.12);
+}
+
+.nf-alert-info {
+    background-color: rgba(141, 123, 255, 0.12);
+}
+
+.nf-dashboard {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 2rem;
+}
+
+.nf-sidebar {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.nf-sidebar-card {
+    background: var(--nf-card-bg);
+    border-radius: var(--nf-radius);
+    padding: 1.5rem;
+    border: 1px solid var(--nf-card-border);
+    box-shadow: var(--nf-shadow);
+}
+
+.nf-sidebar-card h2 {
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+}
+
+.nf-sidebar-card ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.nf-sidebar-card a {
+    color: var(--nf-muted);
+    text-decoration: none;
+    padding: 0.35rem 0.5rem;
+    border-radius: 8px;
+    transition: all var(--nf-transition);
+}
+
+.nf-sidebar-card a.active,
+.nf-sidebar-card a:hover {
+    color: var(--nf-text);
+    background: rgba(141, 123, 255, 0.2);
+}
+
+.nf-cards {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.nf-card {
+    background: var(--nf-card-bg);
+    border-radius: var(--nf-radius);
+    padding: 1.75rem;
+    border: 1px solid var(--nf-card-border);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--nf-shadow);
+}
+
+.nf-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 1px solid transparent;
+    background: linear-gradient(145deg, rgba(141, 123, 255, 0.35), rgba(97, 246, 255, 0.12));
+    mask: linear-gradient(#000, #000), linear-gradient(#000, #000);
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+.nf-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+}
+
+.nf-company {
+    font-size: 0.95rem;
+    color: var(--nf-muted);
+}
+
+.nf-card-body {
+    margin-top: 1rem;
+    line-height: 1.6;
+    color: var(--nf-muted);
+}
+
+.nf-meta {
+    margin: 0.25rem 0;
+}
+
+.nf-badge {
+    background: rgba(97, 246, 255, 0.2);
+    color: var(--nf-accent-strong);
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.nf-notes {
+    margin-top: 1rem;
+    font-size: 0.95rem;
+}
+
+.nf-card-footer {
+    margin-top: 1.5rem;
+    display: grid;
+    gap: 1.25rem;
+}
+
+.nf-form {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.nf-form select,
+.nf-form textarea,
+.nf-form input {
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 0.65rem 0.75rem;
+    background: rgba(9, 13, 32, 0.8);
+    color: var(--nf-text);
+}
+
+.nf-form textarea {
+    resize: vertical;
+}
+
+.nf-button {
+    padding: 0.65rem 1.1rem;
+    border-radius: 10px;
+    border: 1px solid rgba(141, 123, 255, 0.4);
+    background: rgba(141, 123, 255, 0.2);
+    color: var(--nf-text);
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform var(--nf-transition), box-shadow var(--nf-transition);
+}
+
+.nf-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 25px rgba(141, 123, 255, 0.25);
+}
+
+.nf-button-primary {
+    background: linear-gradient(135deg, rgba(141, 123, 255, 0.75), rgba(97, 246, 255, 0.55));
+    border: none;
+}
+
+.nf-checklist {
+    display: grid;
+    gap: 0.6rem;
+}
+
+.nf-checklist h4 {
+    margin: 0;
+}
+
+.nf-checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.nf-toggle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(9, 13, 32, 0.85);
+    color: var(--nf-muted);
+    cursor: pointer;
+    transition: all var(--nf-transition);
+}
+
+.nf-toggle.done {
+    background: rgba(97, 246, 255, 0.25);
+    color: var(--nf-accent-strong);
+}
+
+.nf-accordion summary {
+    cursor: pointer;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.nf-accordion form {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.nf-cover-letter {
+    background: rgba(9, 13, 32, 0.65);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid rgba(97, 246, 255, 0.15);
+    white-space: pre-wrap;
+    line-height: 1.6;
+}
+
+.nf-empty-state {
+    text-align: center;
+    padding: 4rem;
+    background: var(--nf-card-bg);
+    border-radius: var(--nf-radius);
+    border: 1px solid var(--nf-card-border);
+}
+
+@media (max-width: 1100px) {
+    .nf-dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .nf-sidebar {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .nf-main {
+        padding: 1.5rem;
+    }
+
+    .nf-nav {
+        padding: 1rem 1.5rem;
+    }
+
+    .nf-card {
+        padding: 1.25rem;
+    }
+}

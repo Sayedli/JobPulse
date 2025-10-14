@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard · JobPulse{% endblock %}
+
+{% block content %}
+<section class="nf-dashboard">
+    <aside class="nf-sidebar">
+        <div class="nf-sidebar-card">
+            <h2>Status Filters</h2>
+            <ul>
+                <li><a href="?status=all" class="{% if status_filter == 'all' %}active{% endif %}">All</a></li>
+                {% for status in status_summaries %}
+                    <li>
+                        <a href="?status={{ status.value }}" class="{% if status_filter == status.value %}active{% endif %}">
+                            {{ status.label }} ({{ status.count }})
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="nf-sidebar-card">
+            <h2>Quick Sync</h2>
+            <p>Use <code>python manage.py fetch_jobs</code> to refresh listings from Simplify Jobs.</p>
+        </div>
+    </aside>
+
+    <section class="nf-cards">
+        {% if cards %}
+            {% for card in cards %}
+                <article class="nf-card">
+                    <header class="nf-card-header">
+                        <h3>{{ card.posting.title }}</h3>
+                        <span class="nf-company">{{ card.posting.company }}</span>
+                    </header>
+                    <div class="nf-card-body">
+                        <p class="nf-meta">
+                            <strong>Locations:</strong> {{ card.posting.locations|default:"TBD" }}{% if card.posting.is_remote %} · <span class="nf-badge">Remote friendly</span>{% endif %}
+                        </p>
+                        <p class="nf-meta">
+                            <strong>Source:</strong> {{ card.posting.source.name }}{% if card.posting.application_url %} · <a href="{{ card.posting.application_url }}" target="_blank">Apply link</a>{% endif %}
+                        </p>
+                        {% if card.posting.description %}
+                            <p class="nf-notes">{{ card.posting.description }}</p>
+                        {% endif %}
+                    </div>
+                    <footer class="nf-card-footer">
+                        {% if card.application %}
+                            <form method="post" action="{% url 'applications:update_application_status' card.application.pk %}" class="nf-form">
+                                {% csrf_token %}
+                                {{ card.status_form.status }}
+                                {{ card.status_form.notes }}
+                                <button class="nf-button nf-button-primary" type="submit">Update Status</button>
+                            </form>
+
+                            <div class="nf-checklist">
+                                <h4>Checklist</h4>
+                                {% for item in card.application.checklist_items.all %}
+                                    <form method="post" action="{% url 'applications:toggle_checklist_item' item.pk %}" class="nf-checklist-item">
+                                        {% csrf_token %}
+                                        <button type="submit" class="nf-toggle {% if item.is_completed %}done{% endif %}">
+                                            {% if item.is_completed %}✓{% else %}○{% endif %}
+                                        </button>
+                                        <span>{{ item.label }}</span>
+                                    </form>
+                                {% empty %}
+                                    <p>Checklist not yet initialised.</p>
+                                {% endfor %}
+                            </div>
+
+                            <details class="nf-accordion">
+                                <summary>Tailor Resume</summary>
+                                <form method="post" action="{% url 'applications:tailor_resume' card.application.pk %}">
+                                    {% csrf_token %}
+                                    {{ card.resume_form.as_p }}
+                                    <button class="nf-button" type="submit">Generate Tailored Resume</button>
+                                </form>
+                            </details>
+
+                            <details class="nf-accordion">
+                                <summary>Generate Cover Letter</summary>
+                                <form method="post" action="{% url 'applications:generate_cover_letter' card.application.pk %}">
+                                    {% csrf_token %}
+                                    {{ card.cover_letter_form.as_p }}
+                                    <button class="nf-button" type="submit">Draft Cover Letter</button>
+                                </form>
+                                {% if card.application.cover_letter %}
+                                    <pre class="nf-cover-letter">{{ card.application.cover_letter }}</pre>
+                                {% endif %}
+                            </details>
+                        {% else %}
+                            <form method="post" action="{% url 'applications:create_application' card.posting.pk %}">
+                                {% csrf_token %}
+                                <button class="nf-button nf-button-primary" type="submit">Create Application Pipeline</button>
+                            </form>
+                        {% endif %}
+                    </footer>
+                </article>
+            {% endfor %}
+        {% else %}
+            <div class="nf-empty-state">
+                <p>No job postings yet. Run <code>python manage.py fetch_jobs</code> to import roles.</p>
+            </div>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}

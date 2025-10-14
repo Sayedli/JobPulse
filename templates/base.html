@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}JobPulse{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/neuralfield.css' %}">
+</head>
+<body class="nf-body">
+    <div class="nf-background"></div>
+    <nav class="nf-nav">
+        <h1 class="nf-brand">JobPulse</h1>
+        <div class="nf-nav-links">
+            <a href="{% url 'applications:dashboard' %}" class="nf-nav-link">Dashboard</a>
+            <a href="https://github.com/SimplifyJobs/New-Grad-Positions" class="nf-nav-link" target="_blank">Source</a>
+        </div>
+    </nav>
+    <main class="nf-main">
+        {% if messages %}
+            <div class="nf-alerts">
+                {% for message in messages %}
+                    <div class="nf-alert nf-alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
