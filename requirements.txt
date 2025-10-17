@@ -5,3 +5,9 @@ markdown==3.9
 dj-database-url==2.2.0
 gunicorn==22.0.0
 psycopg2-binary==2.9.10
+openai==1.54.3
+selenium==4.25.0
+webdriver-manager==4.0.2
+PyPDF2==3.0.1
+fpdf2==2.7.9
+whitenoise==6.7.0

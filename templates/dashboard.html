@@ -22,6 +22,11 @@
             <h2>Quick Sync</h2>
             <p>Use <code>python manage.py fetch_jobs</code> to refresh listings from Simplify Jobs.</p>
         </div>
+        <div class="nf-sidebar-card">
+            <h2>Profile</h2>
+            <p>Customise resume defaults and signature.</p>
+            <a class="nf-button" href="{% url 'applications:profile' %}">Edit Profile</a>
+        </div>
     </aside>
 
     <section class="nf-cards">
@@ -40,8 +45,14 @@
                             <strong>Source:</strong> {{ card.posting.source.name }}{% if card.posting.application_url %} · <a href="{{ card.posting.application_url }}" target="_blank">Apply link</a>{% endif %}
                         </p>
                         {% if card.posting.description %}
-                            <p class="nf-notes">{{ card.posting.description }}</p>
+                            <p class="nf-notes"><strong>Listing Note:</strong> {{ card.posting.description }}</p>
                         {% endif %}
+                        <div class="nf-job-actions">
+                            <button type="button" class="nf-button nf-button-ghost" data-job-desc-target="job-desc-{{ card.posting.id }}" data-job-id="{{ card.posting.id }}">
+                                View Job Description
+                            </button>
+                        </div>
+                        <div class="nf-job-description" id="job-desc-{{ card.posting.id }}" data-loaded="false"></div>
                     </div>
                     <footer class="nf-card-footer">
                         {% if card.application %}
@@ -69,12 +80,38 @@
 
                             <details class="nf-accordion">
                                 <summary>Tailor Resume</summary>
-                                <form method="post" action="{% url 'applications:tailor_resume' card.application.pk %}">
+                                <p class="nf-meta">Upload a PDF; JobPulse extracts the content and rewrites it for this role.</p>
+                                <form method="post" enctype="multipart/form-data" action="{% url 'applications:tailor_resume' card.application.pk %}">
                                     {% csrf_token %}
                                     {{ card.resume_form.as_p }}
                                     <button class="nf-button" type="submit">Generate Tailored Resume</button>
                                 </form>
                             </details>
+
+                            {% if card.resume_versions %}
+                                <div class="nf-version-list">
+                                    <h4>Resume Versions</h4>
+                                    <ul>
+                                        {% for variant in card.resume_versions %}
+                                            <li class="nf-version-item">
+                                                <div class="nf-version-meta">
+                                                    <span class="nf-version-date">{{ variant.created_at|date:"Y-m-d H:i" }}</span>
+                                                    <span class="nf-version-title">{{ variant.headline|default:card.posting.title }}</span>
+                                                </div>
+                                                <div class="nf-version-actions">
+                                                    <a class="nf-button nf-button-secondary" href="{% url 'applications:download_resume_variant' variant.pk %}">Download</a>
+                                                    {% if variant.summary %}
+                                                        <details>
+                                                            <summary>Summary</summary>
+                                                            <p class="nf-version-summary">{{ variant.summary }}</p>
+                                                        </details>
+                                                    {% endif %}
+                                                </div>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
 
                             <details class="nf-accordion">
                                 <summary>Generate Cover Letter</summary>
@@ -83,8 +120,46 @@
                                     {{ card.cover_letter_form.as_p }}
                                     <button class="nf-button" type="submit">Draft Cover Letter</button>
                                 </form>
-                                {% if card.application.cover_letter %}
-                                    <pre class="nf-cover-letter">{{ card.application.cover_letter }}</pre>
+                            </details>
+
+                            {% if card.cover_letter_versions %}
+                                <div class="nf-version-list">
+                                    <h4>Cover Letters</h4>
+                                    <ul>
+                                        {% for variant in card.cover_letter_versions %}
+                                            <li class="nf-version-item">
+                                                <div class="nf-version-meta">
+                                                    <span class="nf-version-date">{{ variant.created_at|date:"Y-m-d H:i" }}</span>
+                                                    <span class="nf-version-title">{{ variant.subject|default:"Cover Letter" }}</span>
+                                                </div>
+                                                <div class="nf-version-actions">
+                                                    <a class="nf-button nf-button-secondary" href="{% url 'applications:download_cover_letter_variant' variant.pk %}">Download</a>
+                                                    <details>
+                                                        <summary>Preview</summary>
+                                                        <pre class="nf-cover-letter nf-cover-letter-sm">{{ variant.body }}</pre>
+                                                    </details>
+                                                </div>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+
+                            <details class="nf-accordion">
+                                <summary>Auto Apply (Experimental)</summary>
+                                <p class="nf-meta">Automation opens the application portal using Selenium. Review before submitting.</p>
+                                <form method="post" action="{% url 'applications:auto_apply' card.application.pk %}">
+                                    {% csrf_token %}
+                                    {{ card.auto_apply_form.as_p }}
+                                    <button class="nf-button" type="submit">Run Auto Apply</button>
+                                </form>
+                                {% if card.last_auto_apply %}
+                                    <p class="nf-meta">
+                                        <strong>Last attempt:</strong>
+                                        {{ card.last_auto_apply.get_status_display }} ·
+                                        {{ card.last_auto_apply.updated_at|date:"Y-m-d H:i" }}
+                                        {% if card.last_auto_apply.details %}<br>{{ card.last_auto_apply.details }}{% endif %}
+                                    </p>
                                 {% endif %}
                             </details>
                         {% else %}
@@ -101,6 +176,62 @@
                 <p>No job postings yet. Run <code>python manage.py fetch_jobs</code> to import roles.</p>
             </div>
         {% endif %}
-    </section>
 </section>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('click', function (event) {
+    const trigger = event.target.closest('[data-job-desc-target]');
+    if (!trigger) {
+        return;
+    }
+    const targetId = trigger.getAttribute('data-job-desc-target');
+    const container = document.getElementById(targetId);
+    if (!container) {
+        return;
+    }
+
+    if (container.getAttribute('data-loading') === 'true') {
+        return;
+    }
+
+    const jobId = trigger.getAttribute('data-job-id');
+    if (!jobId) {
+        return;
+    }
+
+    if (container.getAttribute('data-loaded') === 'true') {
+        container.classList.toggle('nf-job-description-visible');
+        trigger.textContent = container.classList.contains('nf-job-description-visible') ? 'Hide Job Description' : 'View Job Description';
+        return;
+    }
+
+    container.setAttribute('data-loading', 'true');
+    container.textContent = 'Fetching job description…';
+
+    fetch(`/jobs/${jobId}/description/`)
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error('Request failed');
+            }
+            return response.json();
+        })
+        .then((payload) => {
+            container.textContent = payload.description || 'Description unavailable.';
+            container.setAttribute('data-loaded', 'true');
+            container.classList.add('nf-job-description-visible');
+            trigger.textContent = 'Hide Job Description';
+        })
+        .catch(() => {
+            container.textContent = 'Unable to load job description.';
+            container.classList.add('nf-job-description-visible');
+            trigger.textContent = 'View Job Description';
+        })
+        .finally(() => {
+            container.removeAttribute('data-loading');
+        });
+});
+</script>
 {% endblock %}

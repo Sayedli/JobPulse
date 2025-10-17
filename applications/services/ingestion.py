@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import logging
 import re
 from dataclasses import dataclass
@@ -33,8 +34,11 @@ class ParsedJob:
 
     @property
     def external_id(self) -> str:
-        base = f"{self.company}-{self.title}-{self.application_url}"
-        return re.sub(r"[^a-zA-Z0-9]+", "-", base.lower()).strip("-")
+        slug_base = f"{self.company}-{self.title}"
+        slug = re.sub(r"[^a-zA-Z0-9]+", "-", slug_base.lower()).strip("-")
+        digest = hashlib.sha1(self.application_url.encode("utf-8")).hexdigest()[:10]
+        combined = f"{slug}-{digest}" if slug else digest
+        return combined[:512]
 
 
 def fetch_simplify_jobs_markdown(url: str = SIMPLIFY_JOBS_README) -> str:

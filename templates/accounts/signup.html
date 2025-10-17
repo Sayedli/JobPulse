@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up · JobPulse{% endblock %}
+
+{% block content %}
+<section class="nf-profile">
+    <div class="nf-card nf-profile-card">
+        <h2>Create an Account</h2>
+        <form method="post" class="nf-form nf-form-vertical">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div>
+                <button class="nf-button nf-button-primary" type="submit">Sign Up</button>
+                <a class="nf-button" href="{% url 'accounts:login' %}">Back to login</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

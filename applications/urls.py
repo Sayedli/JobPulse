@@ -27,4 +27,25 @@ urlpatterns = [
         views.toggle_checklist_view,
         name="toggle_checklist_item",
     ),
+    path(
+        "applications/<int:pk>/auto-apply/",
+        views.auto_apply_view,
+        name="auto_apply",
+    ),
+    path("profile/", views.profile_settings, name="profile"),
+    path(
+        "resume-variants/<int:pk>/download/",
+        views.download_resume_variant,
+        name="download_resume_variant",
+    ),
+    path(
+        "cover-letter-variants/<int:pk>/download/",
+        views.download_cover_letter_variant,
+        name="download_cover_letter_variant",
+    ),
+    path(
+        "jobs/<int:pk>/description/",
+        views.job_description_detail,
+        name="job_description",
+    ),
 ]

@@ -29,6 +29,9 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-ym5&ce$6ba1h1_*&!4&
 DEBUG = os.getenv('DJANGO_DEBUG', 'true').lower() == 'true'
 
 ALLOWED_HOSTS = [host.strip() for host in os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if host.strip()]
+LOGIN_URL = 'accounts:login'
+LOGIN_REDIRECT_URL = 'applications:dashboard'
+LOGOUT_REDIRECT_URL = 'accounts:login'
 
 
 # Application definition
@@ -41,10 +44,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'applications',
+    'accounts',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -121,9 +126,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -131,3 +137,11 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 BASE_RESUME_PATH = BASE_DIR / 'data' / 'resume_base.txt'
+
+AUTO_APPLY_ENABLED = os.getenv('AUTO_APPLY_ENABLED', 'false').lower() == 'true'
+AUTO_APPLY_DRIVER = os.getenv('AUTO_APPLY_DRIVER', 'chromium')
+WEBDRIVER_REMOTE_URL = os.getenv('WEBDRIVER_REMOTE_URL')
+
+LLM_PROVIDER = os.getenv('LLM_PROVIDER', 'openai')
+LLM_MODEL = os.getenv('LLM_MODEL', 'gpt-4o-mini')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')

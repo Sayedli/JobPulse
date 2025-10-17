@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Profile · JobPulse{% endblock %}
+
+{% block content %}
+<section class="nf-profile">
+    <div class="nf-card nf-profile-card">
+        <h2>Profile Settings</h2>
+        <p class="nf-meta">Update your display details and optional fallback text used if a resume PDF is not supplied.</p>
+        <form method="post" class="nf-form nf-form-vertical">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div>
+                <button class="nf-button nf-button-primary" type="submit">Save Profile</button>
+                <a class="nf-button" href="{% url 'applications:dashboard' %}">Back to Dashboard</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}
