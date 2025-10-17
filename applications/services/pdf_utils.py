@@ -96,9 +96,32 @@ def write_text_pdf(
 
     pdf.output(str(destination))
     return destination
+
+
 def _coerce_ascii(text: str) -> str:
     if not text:
         return ""
     normalized = unicodedata.normalize("NFKD", text)
-    stripped = normalized.encode("ascii", "ignore").decode("ascii")
-    return stripped if stripped else text.replace("–", "-")
+    replacements = {
+        "–": "-",
+        "—": "-",
+        "•": "-",
+        "·": "-",
+        "’": "'",
+        "‘": "'",
+        "“": '"',
+        "”": '"',
+        "′": "'",
+        "″": '"',
+    }
+    converted: list[str] = []
+    for ch in normalized:
+        if ord(ch) < 128:
+            converted.append(ch)
+        else:
+            converted.append(replacements.get(ch, " "))
+    ascii_text = "".join(converted)
+    ascii_text = re.sub(r"\s+", " ", ascii_text).strip()
+    if not ascii_text:
+        return normalized.encode("ascii", "ignore").decode("ascii")
+    return ascii_text
