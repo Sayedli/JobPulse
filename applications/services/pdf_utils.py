@@ -5,12 +5,18 @@ from datetime import datetime
 from pathlib import Path
 from typing import IO, Iterable
 import unicodedata
+import textwrap
 
 from django.conf import settings
 from django.utils.text import slugify
 
 from PyPDF2 import PdfReader
 from fpdf import FPDF
+
+
+FONT_DIR = Path(settings.BASE_DIR) / "static" / "fonts"
+FONT_REGULAR = FONT_DIR / "DejaVuSans.ttf"
+FONT_BOLD = FONT_DIR / "DejaVuSans-Bold.ttf"
 
 
 class PdfProcessingError(Exception):
@@ -76,23 +82,24 @@ def write_text_pdf(
     """
     destination.parent.mkdir(parents=True, exist_ok=True)
     pdf = FPDF()
-    pdf.set_auto_page_break(auto=True, margin=20)
+    pdf.set_auto_page_break(auto=True, margin=18)
     pdf.add_page()
 
-    font_family = "Helvetica"
+    font_family = _resolve_font(pdf)
     pdf.set_font(font_family, size=12)
 
     if title:
         safe_title = _coerce_ascii(title)
         pdf.set_title(safe_title)
-        pdf.set_font(font_family, "B", 14)
-        pdf.multi_cell(0, 10, safe_title)
+        pdf.set_font(font_family, "B", 18)
+        pdf.multi_cell(0, 12, safe_title.upper())
         pdf.ln(4)
         pdf.set_font(font_family, size=12)
 
     for raw_line in lines:
-        line = _coerce_ascii(raw_line)
-        pdf.multi_cell(0, 8, line if line else " ")
+        wrapped_segments = _wrap_for_pdf(raw_line)
+        for segment in wrapped_segments:
+            pdf.multi_cell(0, 8, segment if segment else " ")
 
     pdf.output(str(destination))
     return destination
@@ -125,3 +132,29 @@ def _coerce_ascii(text: str) -> str:
     if not ascii_text:
         return normalized.encode("ascii", "ignore").decode("ascii")
     return ascii_text
+
+
+def _resolve_font(pdf: FPDF) -> str:
+    try:
+        if FONT_REGULAR.exists():
+            if "DejaVu" not in pdf.fonts:
+                pdf.add_font("DejaVu", "", str(FONT_REGULAR), uni=True)
+            if FONT_BOLD.exists() and "DejaVuB" not in pdf.fonts:
+                pdf.add_font("DejaVu", "B", str(FONT_BOLD), uni=True)
+            return "DejaVu"
+    except Exception:
+        pass
+    return "Helvetica"
+
+
+def _wrap_for_pdf(text: str, width: int = 95) -> list[str]:
+    sanitized = _coerce_ascii(text)
+    if not sanitized:
+        return [""]
+    wrapped = textwrap.wrap(
+        sanitized,
+        width=width,
+        break_long_words=True,
+        break_on_hyphens=True,
+    )
+    return wrapped or [sanitized]

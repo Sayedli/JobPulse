@@ -89,17 +89,25 @@ def _write_cover_letter_file(
     filename = f"cl_{variant.id}_{safe_company}.pdf"
     file_path = base_dir / filename
 
-    lines = [
-        "Cover Letter",
-        "",
-        f"Role: {application.job_posting.title}",
-        f"Company: {application.job_posting.company}",
-        "",
-    ]
-    lines.extend(content.splitlines())
+    lines = _compose_cover_letter_lines(application, variant, content)
 
     try:
         pdf_utils.write_text_pdf(file_path, lines, title=variant.subject or "Cover Letter")
         return file_path
     except OSError:
         return None
+
+
+def _compose_cover_letter_lines(
+    application: Application, variant: CoverLetterVariant, content: str
+) -> list[str]:
+    job = application.job_posting
+    lines: list[str] = []
+    lines.append(f"{job.company} – {job.title}")
+    if job.locations:
+        lines.append(job.locations)
+    if job.application_url:
+        lines.append(f"Application: {job.application_url}")
+    lines.append("")
+    lines.extend(content.splitlines())
+    return lines
