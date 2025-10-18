@@ -151,10 +151,36 @@ def _wrap_for_pdf(text: str, width: int = 95) -> list[str]:
     sanitized = _coerce_ascii(text)
     if not sanitized:
         return [""]
-    wrapped = textwrap.wrap(
-        sanitized,
-        width=width,
-        break_long_words=True,
-        break_on_hyphens=True,
-    )
-    return wrapped or [sanitized]
+    max_width = max(10, width)
+    lines: list[str] = []
+    words = sanitized.split()
+
+    current: list[str] = []
+    current_len = 0
+
+    def flush_current():
+        nonlocal current, current_len
+        if current:
+            lines.append(" ".join(current))
+            current = []
+            current_len = 0
+
+    for word in words:
+        if len(word) >= max_width:
+            flush_current()
+            for chunk in _chunk_word(word, max_width - 1):
+                lines.append(chunk)
+            continue
+        prospective = current_len + len(word) + (1 if current else 0)
+        if prospective > max_width:
+            flush_current()
+        current.append(word)
+        current_len = sum(len(w) for w in current) + max(0, len(current) - 1)
+
+    flush_current()
+    return lines or [sanitized]
+
+
+def _chunk_word(word: str, chunk_size: int) -> list[str]:
+    size = max(1, chunk_size)
+    return [word[i : i + size] for i in range(0, len(word), size)]
