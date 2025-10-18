@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Optional
 
 from django.conf import settings
+from django.utils import timezone
 
 from applications.models import Application, CoverLetterVariant, JobPosting
 from applications.services import llm, pdf_utils
@@ -102,12 +103,14 @@ def _compose_cover_letter_lines(
     application: Application, variant: CoverLetterVariant, content: str
 ) -> list[str]:
     job = application.job_posting
+    generated = timezone.now().strftime("%Y-%m-%d %H:%M")
     lines: list[str] = []
     lines.append(f"{job.company} – {job.title}")
     if job.locations:
         lines.append(job.locations)
     if job.application_url:
         lines.append(f"Application: {job.application_url}")
+    lines.append(f"Generated: {generated}")
     lines.append("")
     lines.extend(content.splitlines())
     return lines
