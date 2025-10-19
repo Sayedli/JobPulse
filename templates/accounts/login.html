@@ -3,15 +3,21 @@
 {% block title %}Login · JobPulse{% endblock %}
 
 {% block content %}
-<section class="nf-profile">
-    <div class="nf-card nf-profile-card">
+<section class="nf-auth">
+    <div class="nf-auth-card">
         <h2>Sign In</h2>
-        <form method="post" class="nf-form nf-form-vertical">
+        <p class="nf-meta">Welcome back. Enter your credentials to access your JobPulse workspace.</p>
+        <form method="post" class="nf-form nf-form-vertical nf-auth-form">
             {% csrf_token %}
             {{ form.as_p }}
-            <div>
+            {% if form.non_field_errors %}
+                <div class="nf-alert nf-alert-error">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+            <div class="nf-auth-actions">
                 <button class="nf-button nf-button-primary" type="submit">Login</button>
-                <a class="nf-button" href="{% url 'accounts:signup' %}">Create account</a>
+                <a class="nf-button nf-button-ghost" href="{% url 'accounts:signup' %}">Create account</a>
             </div>
         </form>
     </div>
