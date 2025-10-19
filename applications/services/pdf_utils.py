@@ -96,8 +96,10 @@ def write_text_pdf(
         pdf.ln(4)
         pdf.set_font(font_family, size=12)
 
+    max_width = pdf.w - pdf.r_margin - pdf.l_margin
+
     for raw_line in lines:
-        wrapped_segments = _wrap_for_pdf(raw_line)
+        wrapped_segments = _wrap_for_pdf(pdf, raw_line, max_width)
         for segment in wrapped_segments:
             pdf.multi_cell(0, 8, segment if segment else " ")
 
@@ -147,40 +149,47 @@ def _resolve_font(pdf: FPDF) -> str:
     return "Helvetica"
 
 
-def _wrap_for_pdf(text: str, width: int = 95) -> list[str]:
+def _wrap_for_pdf(pdf: FPDF, text: str, max_width: float) -> list[str]:
     sanitized = _coerce_ascii(text)
     if not sanitized:
         return [""]
-    max_width = max(10, width)
+
     lines: list[str] = []
-    words = sanitized.split()
+    remaining = sanitized
 
-    current: list[str] = []
-    current_len = 0
+    while remaining:
+        if pdf.get_string_width(remaining) <= max_width:
+            lines.append(remaining)
+            break
 
-    def flush_current():
-        nonlocal current, current_len
-        if current:
-            lines.append(" ".join(current))
-            current = []
-            current_len = 0
+        split_index = _find_split_index(pdf, remaining, max_width)
+        if split_index <= 0:
+            split_index = 1
+        lines.append(remaining[:split_index])
+        remaining = remaining[split_index:].lstrip()
 
-    for word in words:
-        if len(word) >= max_width:
-            flush_current()
-            for chunk in _chunk_word(word, max_width - 1):
-                lines.append(chunk)
-            continue
-        prospective = current_len + len(word) + (1 if current else 0)
-        if prospective > max_width:
-            flush_current()
-        current.append(word)
-        current_len = sum(len(w) for w in current) + max(0, len(current) - 1)
-
-    flush_current()
     return lines or [sanitized]
 
 
-def _chunk_word(word: str, chunk_size: int) -> list[str]:
-    size = max(1, chunk_size)
-    return [word[i : i + size] for i in range(0, len(word), size)]
+def _find_split_index(pdf: FPDF, text: str, max_width: float) -> int:
+    for separator in (" ", "-", "_", "/"):
+        index = _find_split_at_separator(pdf, text, max_width, separator)
+        if index:
+            return index
+    for i in range(min(len(text), 200), 0, -1):
+        if pdf.get_string_width(text[:i]) <= max_width:
+            return i
+    return 0
+
+
+def _find_split_at_separator(pdf: FPDF, text: str, max_width: float, separator: str) -> int:
+    last_pos = -1
+    while True:
+        pos = text.find(separator, last_pos + 1)
+        if pos == -1:
+            break
+        if pdf.get_string_width(text[: pos + 1]) <= max_width:
+            last_pos = pos + 1
+        else:
+            break
+    return last_pos
