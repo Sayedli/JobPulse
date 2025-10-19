@@ -1,6 +1,7 @@
 from django.contrib.auth import login
+from django.contrib.auth import logout
 from django.urls import reverse_lazy
-from django.views.generic import CreateView
+from django.views.generic import CreateView, TemplateView
 
 from .forms import SignUpForm
 
@@ -14,3 +15,11 @@ class SignUpView(CreateView):
         response = super().form_valid(form)
         login(self.request, self.object)
         return response
+
+
+class LoggedOutTemplateView(TemplateView):
+    template_name = "accounts/logged_out.html"
+
+    def get(self, request, *args, **kwargs):
+        logout(request)
+        return super().get(request, *args, **kwargs)

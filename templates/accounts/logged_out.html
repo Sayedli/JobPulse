@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Signed Out · JobPulse{% endblock %}
+
+{% block content %}
+<section class="nf-auth">
+    <div class="nf-auth-card">
+        <h2>You're Signed Out</h2>
+        <p class="nf-meta">Thanks for exploring JobPulse. Log back in when you're ready to tailor more applications.</p>
+        <div class="nf-auth-actions">
+            <a class="nf-button nf-button-primary" href="{% url 'accounts:login' %}">Login Again</a>
+            <a class="nf-button nf-button-ghost" href="{% url 'accounts:signup' %}">Create Account</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
