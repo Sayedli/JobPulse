@@ -251,20 +251,14 @@ def profile_settings(request: HttpRequest) -> HttpResponse:
 @login_required
 def download_resume_variant(request: HttpRequest, pk: int) -> HttpResponse:
     variant = get_object_or_404(ResumeVariant, pk=pk, application__user=request.user)
-    if not variant.file_path:
+    file_path = _resolve_resume_path(variant)
+    if not file_path:
         messages.error(request, "No file associated with this resume variant.")
         return redirect("applications:dashboard")
 
-    file_path = Path(variant.file_path).resolve()
-    base_dir = Path(settings.BASE_DIR).resolve()
-    if base_dir not in file_path.parents and file_path != base_dir:
-        messages.error(request, "Invalid file path.")
-        return redirect("applications:dashboard")
-    if not file_path.exists():
-        messages.error(request, "Stored resume file is missing.")
-        return redirect("applications:dashboard")
-
-    return FileResponse(file_path.open("rb"), as_attachment=True, filename=file_path.name)
+    response = FileResponse(file_path.open("rb"), as_attachment=True, filename=file_path.name)
+    response["Content-Type"] = "application/pdf"
+    return response
 
 
 @login_required
@@ -297,3 +291,21 @@ def job_description_detail(request: HttpRequest, pk: int) -> JsonResponse:
 def _get_or_create_profile(user) -> UserProfile:
     profile, _ = UserProfile.objects.get_or_create(user=user)
     return profile
+
+
+def _resolve_resume_path(variant: ResumeVariant) -> Path | None:
+    if variant.file_path:
+        file_path = Path(variant.file_path)
+        if file_path.exists():
+            return file_path
+
+    application = variant.application
+    if not application or not application.user_id:
+        return None
+
+    generated_dir = Path(settings.BASE_DIR) / "generated" / "resumes" / str(application.user_id)
+    if not generated_dir.exists():
+        return None
+
+    candidates = sorted(generated_dir.glob("*.pdf"), key=lambda p: p.stat().st_ctime, reverse=True)
+    return candidates[0] if candidates else None

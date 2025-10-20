@@ -45,50 +45,56 @@ def tailor_resume(
 
     summary = _build_summary(job_posting, llm_result)
 
+    file_path = _persist_resume_pdf(
+        application=application,
+        headline=f"{job_posting.company} – {job_posting.title}",
+        summary_text=summary,
+        resume_text=resume_text,
+        llm_result=llm_result,
+    )
+
     variant = ResumeVariant.objects.create(
         application=application,
         job_posting=job_posting,
         user=application.user,
         headline=f"{job_posting.company} – {job_posting.title}",
         summary=summary,
+        file_path=str(file_path) if file_path else "",
+        source_pdf_path=str(source_pdf_path) if source_pdf_path else "",
     )
 
-    if source_pdf_path:
-        variant.source_pdf_path = str(source_pdf_path)
-        variant.save(update_fields=["source_pdf_path"])
-
-    generated_file = _persist_resume_pdf(variant, resume_text, summary, llm_result)
-    if generated_file:
-        variant.file_path = str(generated_file)
-        variant.save(update_fields=["file_path"])
     return TailorResumeResult(
         resume_variant=variant,
-        generated_file=generated_file,
+        generated_file=file_path,
         llm_used=llm_result is not None,
     )
 
 
 def _persist_resume_pdf(
-    variant: ResumeVariant,
+    application: Application,
+    headline: str,
     resume_text: str,
     summary_text: str,
     llm_result: Optional[llm.LLMResult],
 ) -> Optional[Path]:
-    user_folder = str(variant.user_id) if variant.user_id else "shared"
+    user = application.user
+    user_folder = str(user.id) if user else "shared"
     resumes_dir = Path(settings.BASE_DIR) / "generated" / "resumes" / user_folder
     resumes_dir.mkdir(parents=True, exist_ok=True)
 
-    safe_company = variant.job_posting.company.lower().replace(" ", "-")
-    filename = f"{variant.id}_{safe_company}.pdf"
+    job_posting = application.job_posting
+    safe_company = job_posting.company.lower().replace(" ", "-")
+    timestamp = timezone.now().strftime("%Y%m%d%H%M%S")
+    filename = f"{timestamp}_{safe_company}.pdf"
     file_path = resumes_dir / filename
 
-    lines = _compose_resume_lines(variant, summary_text, resume_text, llm_result)
+    lines = _compose_resume_lines(job_posting, summary_text, resume_text, llm_result)
 
     try:
-        pdf_utils.write_text_pdf(file_path, lines, title=variant.headline)
+        pdf_utils.write_text_pdf(file_path, lines, title=headline)
         return file_path
     except OSError:
-        logger.exception("Failed to persist tailored resume for variant_id=%s", variant.id)
+        logger.exception("Failed to persist tailored resume PDF for application_id=%s", application.id)
         return None
 
 
@@ -108,12 +114,11 @@ def _build_summary(job_posting, llm_result: Optional[llm.LLMResult]) -> str:
 
 
 def _compose_resume_lines(
-    variant: ResumeVariant,
+    job,
     summary_text: str,
     resume_text: str,
     llm_result: Optional[llm.LLMResult],
 ) -> list[str]:
-    job = variant.job_posting
     generated_at = timezone.now().strftime("%Y-%m-%d %H:%M")
 
     lines: list[str] = []
