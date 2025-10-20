@@ -60,12 +60,14 @@ def tailor_resume(
         headline=f"{job_posting.company} – {job_posting.title}",
         summary=summary,
         file_path=str(file_path) if file_path else "",
-        source_pdf_path=str(source_pdf_path) if source_pdf_path else "",
+        source_pdf_path=str(_relative_path(source_pdf_path)) if source_pdf_path else "",
     )
+
+    absolute_path = Path(settings.BASE_DIR) / file_path if file_path else None
 
     return TailorResumeResult(
         resume_variant=variant,
-        generated_file=file_path,
+        generated_file=absolute_path,
         llm_used=llm_result is not None,
     )
 
@@ -92,7 +94,7 @@ def _persist_resume_pdf(
 
     try:
         pdf_utils.write_text_pdf(file_path, lines, title=headline)
-        return file_path
+        return file_path.relative_to(settings.BASE_DIR)
     except OSError:
         logger.exception("Failed to persist tailored resume PDF for application_id=%s", application.id)
         return None
@@ -175,3 +177,12 @@ def _extract_resume_snippets(resume_text: str, max_items: int = 10) -> list[str]
         snippets = [truncated + "…"] if truncated else []
 
     return snippets or ["Review original resume for detailed accomplishments."]
+
+
+def _relative_path(path: Path | None) -> Path | None:
+    if not path:
+        return None
+    try:
+        return path.relative_to(settings.BASE_DIR)
+    except ValueError:
+        return path
