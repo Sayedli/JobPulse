@@ -96,12 +96,12 @@ def write_text_pdf(
         pdf.ln(4)
         pdf.set_font(font_family, size=12)
 
-    max_width = pdf.w - pdf.r_margin - pdf.l_margin
+    cell_width = pdf.w - pdf.r_margin - pdf.l_margin
 
     for raw_line in lines:
-        wrapped_segments = _wrap_for_pdf(pdf, raw_line, max_width)
+        wrapped_segments = _wrap_for_pdf(pdf, raw_line, cell_width)
         for segment in wrapped_segments:
-            pdf.multi_cell(0, 8, segment if segment else " ")
+            pdf.multi_cell(cell_width, 8, segment if segment else " ")
 
     pdf.output(str(destination))
     return destination
@@ -176,7 +176,7 @@ def _find_split_index(pdf: FPDF, text: str, max_width: float) -> int:
         index = _find_split_at_separator(pdf, text, max_width, separator)
         if index:
             return index
-    for i in range(min(len(text), 200), 0, -1):
+    for i in range(len(text), 0, -1):
         if pdf.get_string_width(text[:i]) <= max_width:
             return i
     return 0
