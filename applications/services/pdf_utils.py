@@ -122,6 +122,91 @@ def write_text_pdf(
     return destination
 
 
+def write_resume_pdf(destination: Path, document: ResumeDocument) -> Path:
+    """
+    Render a structured resume using section metadata so the output mirrors the
+    original resume layout as closely as possible.
+    """
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+
+    font_family = _resolve_font(pdf)
+    header_font = font_family
+
+    pdf.set_font(header_font, "B", 20)
+    pdf.multi_cell(0, 12, _coerce_ascii(document.candidate_name).upper())
+    pdf.ln(2)
+
+    pdf.set_font(font_family, size=11)
+    for line in document.contact_lines:
+        safe_line = _coerce_ascii(line)
+        pdf.multi_cell(0, 6, safe_line, align="L")
+    pdf.ln(3)
+
+    pdf.set_font(font_family, "B", 13)
+    pdf.multi_cell(0, 8, _coerce_ascii(document.target_headline))
+    pdf.ln(4)
+
+    body_font = font_family
+    for section in document.sections:
+        if not section.lines:
+            continue
+        pdf.set_font(body_font, "B", 12)
+        pdf.multi_cell(0, 7, _coerce_ascii(section.title).upper())
+        pdf.ln(1)
+        pdf.set_font(body_font, size=11)
+        for raw_line in section.lines:
+            _write_resume_line(pdf, raw_line, body_font)
+        pdf.ln(2)
+
+    pdf.output(str(destination))
+    return destination
+
+
+def _write_resume_line(pdf: FPDF, raw_line: str, font_family: str) -> None:
+    text = raw_line.strip()
+    if not text:
+        pdf.ln(1)
+        return
+
+    bullet_chars = {"•", "-", "*", "–"}
+    leading_char = text[0]
+    if leading_char in bullet_chars:
+        bullet_text = text.lstrip("•-*– ").strip()
+        pdf.set_x(pdf.l_margin + 4)
+        pdf.multi_cell(
+            0,
+            6,
+            f"• {_coerce_ascii(bullet_text)}" if bullet_text else "•",
+        )
+        return
+
+    if _looks_like_entry_header(text):
+        pdf.set_font(font_family, style="B", size=11)
+        pdf.multi_cell(0, 6, _coerce_ascii(text))
+        pdf.set_font(font_family, size=11)
+        return
+
+    pdf.multi_cell(0, 6, _coerce_ascii(text))
+
+
+def _looks_like_entry_header(line: str) -> bool:
+    stripped = line.strip()
+    if not stripped:
+        return False
+    if stripped.isupper() and 3 <= len(stripped.split()) <= 8:
+        return True
+    if " — " in stripped or " - " in stripped:
+        return True
+    if "|" in stripped and len(stripped) < 120:
+        return True
+    if re.match(r".*\b(January|February|March|April|May|June|July|August|September|October|November|December)\b", stripped):
+        return True
+    return False
+
+
 def _coerce_ascii(text: str) -> str:
     if not text:
         return ""
