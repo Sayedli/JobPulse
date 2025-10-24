@@ -294,18 +294,24 @@ def _get_or_create_profile(user) -> UserProfile:
 
 
 def _resolve_resume_path(variant: ResumeVariant) -> Path | None:
+    candidates: list[Path] = []
+
     if variant.file_path:
-        file_path = Path(variant.file_path)
-        if file_path.exists():
-            return file_path
+        stored = Path(variant.file_path)
+        if not stored.is_absolute():
+            stored = Path(settings.BASE_DIR) / stored
+        candidates.append(stored)
 
     application = variant.application
-    if not application or not application.user_id:
-        return None
+    if application and application.user_id:
+        generated_dir = Path(settings.BASE_DIR) / "generated" / "resumes" / str(application.user_id)
+        if generated_dir.exists():
+            candidates.extend(sorted(generated_dir.glob("*.pdf"), key=lambda p: p.stat().st_ctime, reverse=True))
 
-    generated_dir = Path(settings.BASE_DIR) / "generated" / "resumes" / str(application.user_id)
-    if not generated_dir.exists():
-        return None
-
-    candidates = sorted(generated_dir.glob("*.pdf"), key=lambda p: p.stat().st_ctime, reverse=True)
-    return candidates[0] if candidates else None
+    for file_path in candidates:
+        if file_path.exists():
+            if not variant.file_path:
+                variant.file_path = str(file_path.relative_to(settings.BASE_DIR))
+                variant.save(update_fields=["file_path"])
+            return file_path
+    return None
