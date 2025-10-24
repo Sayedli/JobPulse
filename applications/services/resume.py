@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
@@ -280,7 +281,6 @@ def _extract_job_requirements(description: str, max_items: int = 8) -> list[str]
 def _build_alignment_lines(requirements: list[str], accomplishments: list[str]) -> list[str]:
     if not requirements:
         return []
-    keyword_cache = {_normalize_keywords(req): req for req in requirements}
     acc_keyword_cache = [_normalize_keywords(acc) for acc in accomplishments]
     used_accomplishments: set[int] = set()
     alignments: list[str] = []
@@ -303,11 +303,9 @@ def _build_alignment_lines(requirements: list[str], accomplishments: list[str]) 
             highlight = accomplishments[best_idx]
             alignments.append(f"{requirement} → Highlight: {highlight}")
         else:
-            focus = ", ".join(sorted(req_keywords - STOPWORDS)) if req_keywords else requirement
-            if not focus:
-                focus = requirement
+            focus = ", ".join(sorted(req_keywords)) if req_keywords else requirement
             alignments.append(
-                f"{requirement} → Plan: Map a measurable win that demonstrates ownership of this requirement."
+                f"{requirement} → Plan: Prepare a measurable example that demonstrates strength in {focus}."
             )
     return alignments
 
