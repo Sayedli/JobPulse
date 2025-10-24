@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import IO, Iterable
+from typing import IO, Iterable, List
 import unicodedata
 import textwrap
 
@@ -17,6 +18,20 @@ from fpdf import FPDF
 FONT_DIR = Path(settings.BASE_DIR) / "static" / "fonts"
 FONT_REGULAR = FONT_DIR / "DejaVuSans.ttf"
 FONT_BOLD = FONT_DIR / "DejaVuSans-Bold.ttf"
+
+
+@dataclass(slots=True)
+class ResumeSection:
+    title: str
+    lines: List[str]
+
+
+@dataclass(slots=True)
+class ResumeDocument:
+    candidate_name: str
+    contact_lines: List[str]
+    target_headline: str
+    sections: List[ResumeSection]
 
 
 class PdfProcessingError(Exception):
